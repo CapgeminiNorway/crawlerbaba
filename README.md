@@ -1,2 +1,2 @@
-# crawler-baba
-crawl videos of skilled developers from JavaZone, etc ...using Golang
+# crawler-baba  
+crawl videos from Vimeo API... for learning Golang! 
