@@ -1,40 +1,15 @@
 package main
 
 import (
+	"./baba"
 	"bufio"
 	"fmt"
 	"github.com/silentsokolov/go-vimeo/vimeo"
-	"golang.org/x/oauth2"
-	"io"
 	"os"
 	"strings"
-	"time"
 )
 
-type Video struct {
-	PersonName string `json:",omitempty"`
-	Name string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Link string `json:"link,omitempty"`
-	ReleaseTime time.Time `json:"release_time,omitempty"`
-}
-type JavaZone struct {
-	UserId  string
-	Albums  map[string]string
-	AlbumId string
-}
-
-
 func main() {
-
-	/*
-	OK! ask user input for
-		OK! vimeoToken as text or load from file
-		choose Javazone albums: 2016, 2017, 2018
-
-	OK! collect data from Vimeo
-	OK! write as a CSV file
-	*/
 
 	// --- vimeoToken ---
 	// try to get vimeToken from env-vars
@@ -53,123 +28,74 @@ func main() {
 			panic("!!!missing vimeoToken!!!")
 		}
 	}
-	vimeoClient := initVimeoClient(vimeoToken)
+	vimeoClient := baba.InitVimeoClient(vimeoToken)
 
-	javaZone := JavaZone{}
-	javaZone.UserId = "7540193"
-	// TODO: NDC channelId 1411895
+	loadVideosJavaZone(vimeoClient)
+	loadVideosNDCOslo(vimeoClient)
+}
 
-	javaZone.Albums = getAlbums()
-	javaZone.AlbumId = javaZone.Albums["JavaZone-2018"]
-	fmt.Println(javaZone)
+func loadVideosJavaZone(vimeoClient *vimeo.Client) {
+	community := baba.Community{}
+	community.UserId = "7540193"
+	community.Name = "JavaZone"
 
-	for albumName, albumId := range javaZone.Albums {
-		javaZone.AlbumId = albumId
-		videos := getAlbumVideos(vimeoClient, javaZone)
+	community.Albums = albums("JavaZone")
+	community.AlbumId = community.Albums["JavaZone-2018"]
+	fmt.Println(community)
+
+	for albumName, albumId := range community.Albums {
+		community.AlbumId = albumId
+		videos := baba.GetAlbumVideos(vimeoClient, community)
 		fmt.Printf("--> %v | videos #: %d \n", albumName, len(videos))
 
 		if len(videos) > 0 {
-			writeToFile(getAlbumName(javaZone), videos)
+			baba.WriteToFile(albumName, videos)
 		}
 	}
-
 }
 
-func initVimeoClient(vimeoToken string) (vimeoClient *vimeo.Client) {
-	tokenSource := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: vimeoToken},
-	)
-	tokenContext := oauth2.NewClient(oauth2.NoContext, tokenSource)
-	vimeoClient = vimeo.NewClient(tokenContext, nil)
+func loadVideosNDCOslo(vimeoClient *vimeo.Client) {
+	community := baba.Community{}
+	community.UserId = "12026726"
+	community.Name = "NDC-Oslo"
 
-	// FIXME: make a simple API call to validate the token
+	community.Albums = albums("NDC-Oslo")
+	community.AlbumId = community.Albums["NDC-Oslo-2018"]
+	fmt.Println(community)
 
-	return
-}
+	for albumName, albumId := range community.Albums {
+		community.AlbumId = albumId
+		videos := baba.GetAlbumVideos(vimeoClient, community)
+		fmt.Printf("--> %v | videos #: %d \n", albumName, len(videos))
 
-func csvHeader() (lineHeader string){
-
-	lineHeader = ""
-	lineHeader += "PersonName, Name, Link, ReleaseTime, "//Description, "
-	lineHeader += "GitHub, DuckDuckGo, Twitter, LinkedIn"
-	return
-}
-func composeLine(video Video) (line string) {
-
-	duckduckgo := "https://duckduckgo.com/?q="
-	github := "https://github.com/search?type=Users&q="
-	twitter := "https://twitter.com/search?f=users&q="
-	linkedin := "https://www.linkedin.com/search/results/people/?keywords="
-
-	video.Name = strings.Replace(video.Name,",","", -1)
-	video.Name = strings.Replace(video.Name,";","", -1)
-
-	line = ""
-	line += video.PersonName + ", "
-	line += video.Name + ", "
-	line += video.Link + ", "
-	line += video.ReleaseTime.String() + ", "
-	//line += strings.Replace(video.Description,","," ", -1) + ", "
-
-	searchTerm := strings.Replace(video.PersonName," ","%20", -1)
-	//searchTerm = strings.Replace(video.PersonName,","," ", -1)
-	github += searchTerm
-	line += github + ", "
-	duckduckgo += searchTerm
-	line += duckduckgo + ", "
-	twitter += searchTerm
-	line += twitter + ", "
-	linkedin += searchTerm
-	line += linkedin + ", "
-
-	//fmt.Println(line)
-
-	return
-}
-func writeToFile(albumName string, videos []Video) {
-
-	file, err := os.Create("./"+albumName + ".csv")
-	checkError(err)
-	defer file.Close()
-
-	_, err = io.WriteString(file, strings.TrimSpace(csvHeader()) + "\n")
-	checkError(err)
-
-	for _, video := range videos {
-
-		if len(strings.TrimSpace(video.Name)) == 0 || strings.Contains(video.Name, "{"){
-			continue
+		if len(videos) > 0 {
+			baba.WriteToFile(albumName, videos)
 		}
-		line := composeLine(video)
-		_, err := io.WriteString(file, strings.TrimSpace(line) + "\n")
-		checkError(err)
 	}
 }
 
-func getNdcOsloChannels() (channels map[string]string) {
-	// Oslo 2018 https://vimeo.com/channels/1411895/videos
-	channels = make(map[string]string)
-	channels["NDC-Oslo-2018"] = "1411895"
-	channels["NDC-Oslo-2017"] = "1264603"
-	channels["NDC-Oslo-2016"] = "ndcoslo2016"
-
-	return
-}
-
-func getAlbums() (albums map[string]string){
+func albums(which string) (albums map[string]string){
 
 	// TODO: load album list from API
 	albums = make(map[string]string)
-	albums["JavaZone-2018"] = "5419780"
-	//albums["JavaZone-2017"] = "4766821"
-	//albums["JavaZone-2016"] = "4133413"
-	// albums["JavaZone-2015"] = "3556815"
-	// albums["JavaZone-2014"] = "3031533"
+	if strings.Contains(strings.ToUpper(which), "NDC-OSLO") {
+		albums["NDC-Oslo-2018"] = "5477311"
+		albums["NDC-Oslo-2017"] = "5491392"
+		albums["NDC-Oslo-2016"] = "5506154"
+	} else { // default javazone
+
+		albums["JavaZone-2018"] = "5419780"
+		albums["JavaZone-2017"] = "4766821"
+		albums["JavaZone-2016"] = "4133413"
+		//albums["JavaZone-2015"] = "3556815"
+		//albums["JavaZone-2014"] = "3031533"
+	}
+
 
 	return
 }
 
-func getAlbumName(javaZone JavaZone) (albumName string) {
+func albumName(javaZone baba.Community) (albumName string) {
 
 	for key,val := range javaZone.Albums {
 		if javaZone.AlbumId == val {
@@ -181,62 +107,5 @@ func getAlbumName(javaZone JavaZone) (albumName string) {
 	return
 }
 
-func getAlbumVideos(vimeoClient *vimeo.Client, javaZone JavaZone) (videos []Video) {
 
-	optPerPage := 42
-	optPage := 1
-	optFields := "uri,name,link,release_time,user.uri,user.name,user.link" // description,
 
-	videos = make([]Video, 1)
-	for {
-		//fmt.Printf("...optPage: %v", optPage)
-
-		vimeoVideos, resp, err := vimeoClient.Users.AlbumListVideo(javaZone.UserId, javaZone.AlbumId, vimeo.OptPage(optPage), vimeo.OptPerPage(optPerPage), vimeo.OptFields{optFields})
-		checkError(err)
-
-		fmt.Printf("Current page: %d\n", resp.Page)
-		fmt.Printf("Next page: %s\n", resp.NextPage)
-		fmt.Printf("Prev page: %s\n", resp.PrevPage)
-		fmt.Printf("Total objects: %d\n", resp.Total)
-
-		if len(strings.TrimSpace(resp.NextPage)) == 0 {
-			break
-		}
-		optPage++
-		/*if optPage > 2 {
-			fmt.Println("manual break!!")
-			break
-		}*/
-
-		for _,vimeoVideo := range vimeoVideos {
-
-			video := Video{}
-			video.Name = vimeoVideo.Name
-			video.PersonName = parsePersonName(vimeoVideo.Name)
-			video.Link = vimeoVideo.Link
-			video.ReleaseTime = vimeoVideo.ReleaseTime
-			//video.Description = vimeoVideo.Description
-			videos = append(videos, video)
-		}
-	}
-
-	return
-}
-
-func parsePersonName(videoName string) string {
-	items := strings.Split(videoName, ":")
-	// FIXME: do err parsing check
-	personName := items[len(items)-1] // the last item is the personName
-	personName = strings.Replace(personName,","," ", -1)
-	personName = strings.TrimSpace(personName)
-	if len(personName) == 0 {
-		personName = "-"
-	}
-	return personName
-}
-
-func checkError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
