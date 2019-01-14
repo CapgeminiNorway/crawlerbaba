@@ -187,19 +187,8 @@ func getAlbumVideos(vimeoClient *vimeo.Client, javaZone JavaZone) (videos []Vide
 	optPage := 1
 	optFields := "uri,name,link,release_time,user.uri,user.name,user.link" // description,
 
-	/*
-	// make use of go-lib for vimeo
-	fmt.Println("--- using VIMEO Lib ---")
-	tokenSource := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: vimeoToken},
-	)
-	tokenContext := oauth2.NewClient(oauth2.NoContext, tokenSource)
-	client := vimeo.NewClient(tokenContext, nil)
-	*/
-
 	videos = make([]Video, 1)
-	nextPage := 1
-	for nextPage>0 {
+	for {
 		//fmt.Printf("...optPage: %v", optPage)
 
 		vimeoVideos, resp, err := vimeoClient.Users.AlbumListVideo(javaZone.UserId, javaZone.AlbumId, vimeo.OptPage(optPage), vimeo.OptPerPage(optPerPage), vimeo.OptFields{optFields})
@@ -211,13 +200,12 @@ func getAlbumVideos(vimeoClient *vimeo.Client, javaZone JavaZone) (videos []Vide
 		fmt.Printf("Total objects: %d\n", resp.Total)
 
 		if len(strings.TrimSpace(resp.NextPage)) == 0 {
-			nextPage = 0
+			break
 		}
 		optPage++
-
 		/*if optPage > 2 {
-			nextPage = 0
 			fmt.Println("manual break!!")
+			break
 		}*/
 
 		for _,vimeoVideo := range vimeoVideos {
