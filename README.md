@@ -33,7 +33,7 @@ By default, app checks for env-var to find _vimeoToken_, if not found then it as
 # set vimeoToken as env-variable    
 $ export VIMEO_TOKEN=<your-vimeo-token>     
 
-# OR just enter it when app asks your for it     
+# OR just enter it when app asks you for it     
 
 ```
 
@@ -62,3 +62,6 @@ $ GOOS=darwin GOARCH=amd64 go build crawler.go
 $ GOOS=windows GOARCH=amd64 go build crawler.go    
 
 ```
+
+see [make-build.sh](make-build.sh) that builds for all common platforms
+
