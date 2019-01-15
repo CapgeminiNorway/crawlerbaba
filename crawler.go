@@ -11,24 +11,27 @@ import (
 
 func main() {
 
-	// --- vimeoToken ---
-	// try to get vimeToken from env-vars
+	// try to get vimeoToken from env-vars
 	vimeoToken := os.Getenv("VIMEO_TOKEN")
 	//fmt.Printf("token from ENV: %v \n", vimeoToken)
 	vimeoToken = strings.TrimSpace(vimeoToken)
 
-	if len(vimeoToken) == 0 || len(vimeoToken) < 20 { // if not ask the user to enter it manually
+	if len(vimeoToken) == 0 || len(vimeoToken) < 20 {
+		// if not found then ask the user to enter it manually
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter your VIMEO token: ")
 		vimeoToken, _ := reader.ReadString('\n')
 		vimeoToken = strings.TrimSpace(vimeoToken)
 		if len(vimeoToken) == 0 || len(vimeoToken) < 20 {
-			fmt.Println("!!!MUST provide vimeoToken to be able to use Vimeo API!!!")
-			fmt.Println("get it from https://developer.vimeo.com/api/start ")
+			baba.DisplayTokenWarning()
 			panic("!!!missing vimeoToken!!!")
 		}
 	}
 	vimeoClient := baba.InitVimeoClient(vimeoToken)
+	if vimeoClient == nil {
+		baba.DisplayTokenWarning()
+		panic("!!!vimeoToken is NOT valid!!!")
+	}
 
 	loadVideosJavaZone(vimeoClient)
 	loadVideosNDCOslo(vimeoClient)
@@ -91,11 +94,10 @@ func albums(which string) (albums map[string]string){
 		//albums["JavaZone-2014"] = "3031533"
 	}
 
-
 	return
 }
 
-func albumName(javaZone baba.Community) (albumName string) {
+/*func albumName(javaZone baba.Community) (albumName string) {
 
 	for key,val := range javaZone.Albums {
 		if javaZone.AlbumId == val {
@@ -105,7 +107,7 @@ func albumName(javaZone baba.Community) (albumName string) {
 	}
 
 	return
-}
+}*/
 
 
 

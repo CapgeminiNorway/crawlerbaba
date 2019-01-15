@@ -1,6 +1,9 @@
 package baba
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Video struct {
 	PersonName string `json:",omitempty"`
@@ -16,7 +19,11 @@ type Community struct {
 	AlbumId string
 }
 
-
+func DisplayTokenWarning() {
+	//fmt.Println("!!!vimeoToken is NOT valid!!!")
+	fmt.Println("!!!you MUST provide vimeoToken to be able to use Vimeo API!!!")
+	fmt.Println("get it from https://developer.vimeo.com/api/start ")
+}
 func CheckError(err error) {
 	if err != nil {
 		panic(err)

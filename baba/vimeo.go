@@ -14,11 +14,18 @@ func InitVimeoClient(vimeoToken string) (vimeoClient *vimeo.Client) {
 	tokenContext := oauth2.NewClient(oauth2.NoContext, tokenSource)
 	vimeoClient = vimeo.NewClient(tokenContext, nil)
 
-	// FIXME: make a simple API call to validate the token
+	if !isValidToken(vimeoClient) {
+		vimeoClient = nil
+	}
 
 	return
 }
 
+func isValidToken(vimeoClient *vimeo.Client) bool  {
+	// make a simple API call to check token validity
+	_, _, err := vimeoClient.CreativeCommons.List(vimeo.OptPage(1), vimeo.OptPerPage(1))
+	return err == nil
+}
 func GetAlbumVideos(vimeoClient *vimeo.Client, community Community) (videos []Video) {
 
 	optPerPage := 42
