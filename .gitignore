@@ -5,7 +5,9 @@
 *.env
 # executable binary
 crawler
-crawler.exe
+crawler_mac*
+crawler_linux*
+crawler_win*
 
 # Binaries for programs and plugins
 *.exe
