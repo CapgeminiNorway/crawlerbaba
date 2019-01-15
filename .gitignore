@@ -3,6 +3,9 @@
 
 *.csv
 *.env
+# executable binary
+crawler
+crawler.exe
 
 # Binaries for programs and plugins
 *.exe
