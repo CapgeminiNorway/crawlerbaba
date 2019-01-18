@@ -12,6 +12,9 @@ In order to build and run this app you need to have a couple of things installed
 - The [Go SDK](https://golang.org)   
 - An IDE for the development, like [Atom](https://atom.io) or IntelliJ/Goland       
 
+### Running the App   
+check [Releases](https://github.com/CapgeminiNorway/crawlerbaba/releases) to download the binary suitable for your platform, then you can run it as executable prog.  
+
 ### Building the App  
 
 #### Clone this repo     
